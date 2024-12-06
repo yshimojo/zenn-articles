@@ -3,7 +3,7 @@ title: "Vertex AI Vector Search のハイブリッド検索を日本語で試し
 emoji: "🔍"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["tech", "googlecloud", "vertexai", "vectorsearch", "embedding"]
-published: false
+published: true
 ---
 [Google Cloud Japan Advent Calendar 2024](https://zenn.dev/google_cloud_jp/articles/7799cce9f23cf0) 6 日目です！
 
