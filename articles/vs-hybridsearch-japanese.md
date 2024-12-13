@@ -30,7 +30,7 @@ Vector Search では、従来からサポートしているセマンティック
 ## 疎ベクトル (Sparse Vector) とは？
 
 そもそも疎ベクトル (Sparse Vector) とは何でしょうか？
-単的に言うと、単的に言うと少数の要素にのみ 0 以外の値が入っており、その他ほとんどの要素には `0` が入っているベクトルのことです。
+単的に言うと、少数の要素にのみ `0 以外の値`が入っており、その他ほとんどの要素には `0` が入っているベクトルのことです。
 
 ![token_search](https://cloud.google.com/static/vertex-ai/docs/vector-search/images/token_search.gif)
 
