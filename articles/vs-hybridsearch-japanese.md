@@ -38,7 +38,7 @@ Vector Search では、従来からサポートしているセマンティック
 
 例えば、以下のような 5 つの文書からなる日本語コーパスがあるとします。
 
-```
+```python
 corpus_ja = [
     "東京は大阪の東にある",
     "大阪は東京の西にある",
@@ -80,10 +80,10 @@ TF-IDF のスコア計算は TF 値 (単語の出現頻度) と IDF 値 (逆文�
 
 必要なパッケージをインストールして MeCab の Tagger オブジェクトを利用した日本語トークナイザ関数を定義します。
 
-```
+```python
 ! pip install mecab-python3 unidic-lite
 ```
-```
+```python
 import MeCab
 
 # MeCab の形態素解析器オブジェクトを作成
@@ -106,7 +106,7 @@ def mecab_tokenizer(text):
 TF-IDF 疎ベクトルの作成には [scikit-learn](https://scikit-learn.org/stable/) の [TfidfVectorizer](https://scikit-learn.org/1.5/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html) を利用します。
 文書 (ドキュメント) は先ほどの `corpus_ja` を利用し、トーカナイザには先ほど定義した `mecab_tokenizer` 関数を指定しています。
 
-```
+```python
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 # TF-IDF ベクトルを作成
@@ -138,7 +138,7 @@ tfidf_vectors_df.head()
 実際にクエリを作成してドキュメントとの間のスコアを計算してみましょう。
 今回クエリには「`大阪は京都の南にある`」というテキストを入力してみます。
 
-```
+```python
 query = "大阪は京都の南にある"
 
 # TF-IDF クエリベクトルを作成
@@ -166,7 +166,7 @@ scores_df.sort_values('scores', ascending=False).head()
 
 ちなみに `tfidf_vectors` の中身を見ると実際には以下のデータ形式となっています。
 
-```
+```python
 print(tfidf_vectors)
 ```
 ```
@@ -198,10 +198,10 @@ print(tfidf_vectors)
 
 今回は Python の Wikipedia モジュールを利用して、各都道府県ごとに存在する「○○県の観光地」というタイトルの Wikipedia ページをインポートして利用します。
 
-```
+```python
 ! pip install wikipedia
 ```
-```
+```python
 import wikipedia
 import pandas as pd
 
@@ -240,7 +240,7 @@ corpus_ja = df.content.tolist()
 疎ベクトルを取得する関数を定義します。
 先ほど定義した `mecab_tokenizer` 関数をトーカナイザに指定して `TfidfVectorizer` で TF-IDF ベクトルを作成します。
 
-```
+```python
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 # 日本語トークナイザを指定して TF-IDF ベクトルを学習
@@ -265,7 +265,7 @@ Vector Search にインプットするフォーマットに合わせて `{"value
 
 密ベクトルの取得には [Vertex AI Text Embeddings API](https://cloud.google.com/vertex-ai/generative-ai/docs/embeddings/get-text-embeddings) の [Multilingual モデル](https://cloud.google.com/vertex-ai/generative-ai/docs/embeddings/get-text-embeddings#language_coverage_for_textembedding-gecko-multilingual_models)を利用します。
 
-```
+```python
 from vertexai.language_models import TextEmbeddingModel, TextEmbeddingInput
 
 model = TextEmbeddingModel.from_pretrained("textembedding-gecko-multilingual")
@@ -295,7 +295,7 @@ def get_query_dense_embedding(text):
 
 Vector Search にインプットするインデックスファイルを作成します。
 
-```
+```python
 # Vector Search 用のインデックスファイルを作成
 items = []
 for i in range(len(df)):
@@ -311,7 +311,7 @@ items[0]
 
 `item[0]` の中身は以下の形式となっています。
 
-```
+```json
 {
    "id":0,
    "title":"北海道の観光地",
@@ -346,18 +346,18 @@ items[0]
 
 次に items の内容を出力したインデックスファイルを GCS に格納します。
 
-```
+```python
 # Project ID & リージョンを設定
 PROJECT_ID = ! gcloud config get project
 PROJECT_ID = PROJECT_ID[0]
 LOCATION = "us-central1"
 ```
-```
+```python
 # インデックスファイル格納用の GCS バケットを作成
 BUCKET_URI = f"gs://{PROJECT_ID}-vs-hybridsearch-ja"
 ! gsutil mb -l $LOCATION -p $PROJECT_ID $BUCKET_URI
 ```
-```
+```python
 # インデックスファイルを GCS バケットに格納
 with open("items.json", "w") as f:
     for item in items:
@@ -378,7 +378,7 @@ Vector Search にインデックスをデプロイしてクエリを実行する
 
 まずは Vertex AI の Python SDK をインポートして初期化します。
 
-```
+```python
 # Vertex AI を初期化
 from google.cloud import aiplatform
 
@@ -387,7 +387,7 @@ aiplatform.init(project=PROJECT_ID, location=LOCATION)
 
 先ほど作成して GCS に保管したインデックスファイルを指定して Vector Search の Index を作成します。
 
-```
+```python
 # Index を作成
 my_hybrid_index = aiplatform.MatchingEngineIndex.create_tree_ah_index(
     display_name="vs-hybridsearch-ja-index",
@@ -400,7 +400,7 @@ my_hybrid_index = aiplatform.MatchingEngineIndex.create_tree_ah_index(
 
 Index Endpoint を作成します。
 
-```
+```python
 # Index Endppoint を作成
 my_index_endpoint = aiplatform.MatchingEngineIndexEndpoint.create(
     display_name=f"vs-hybridsearch-ja-index-endpoint",
@@ -411,7 +411,7 @@ my_index_endpoint = aiplatform.MatchingEngineIndexEndpoint.create(
 Index Endpoint に Index をデプロイします。
 (初回のデプロイが完了するまでには 20 ~ 30 分かかります)
 
-```
+```python
 # Index を Index Endpoint にデプロイ
 DEPLOYED_HYBRID_INDEX_ID = f"vs_hybridsearch_ja_deployed"
 my_index_endpoint.deploy_index(
@@ -426,7 +426,7 @@ my_index_endpoint.deploy_index(
 HybridQuery クラスをインポートしてクエリを作成します。
 今回クエリには「`文化遺産`」というテキストを入力してみます。
 
-```
+```python
 from google.cloud.aiplatform.matching_engine.matching_engine_index_endpoint import (
     HybridQuery,
 )
@@ -445,7 +445,7 @@ query = HybridQuery(
 
 クエリを Deployed Index に対して送信します。
 
-```
+```python
 # ハイブリッドクエリを送信
 response = my_index_endpoint.find_neighbors(
     deployed_index_id=DEPLOYED_HYBRID_INDEX_ID,
