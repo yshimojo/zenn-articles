@@ -36,10 +36,11 @@ RAG Engine を利用する流れは次の通りです。
 1. RAG コーパスを作成
 2. RAG コーパスにファイルをインポート
 3. RAG コーパスを指定して検索ツールを作成
-4. Gemini (LLM) へのリクエスト (クエリ) 送信時に 3 のツールを指定して回答を生成
+4. Gemini (LLM) へのリクエスト送信時に 3 のツールを指定して回答を生成
 
-1 のコーパス作成時には、任意でエンベディングモデルおよび RAG ベクトル DB を指定可能です。
-4 にてクエリが送信されると、まずはじめに 3 で作成した検索ツールを介して関連するドキュメントを検索し、そこで抽出した情報を Gemini (LLM) に対してコンテキストとして提供することで、最終的に Gemini がデータに基づいた回答を生成してくれます。
+1 のコーパス作成時には、任意でエンベディングモデルおよび RAG ベクトル DB を指定することが可能です。
+
+4 にてリクエスト (クエリ) が送信されると、まずはじめに 3 で作成した検索ツールを介して関連するドキュメントを検索し、そこで抽出した情報を Gemini (LLM) に対してコンテキストとして提供することで、最終的に Gemini がデータに基づいた回答を生成してくれます。
 
 ### エンベディングモデルの選択
 
@@ -70,12 +71,12 @@ RAG Engine を利用する流れは次の通りです。
 
 ### データ取り込み・変換
 
-データを取り込む際に、各ドキュメントは小さなチャンクという単位に分割されるのですが、RAG Engine では `chunk_size` と `chunk_overlap` という [2 つのパラメータ](https://cloud.google.com/vertex-ai/generative-ai/docs/rag-overview#supported-transformations)が指定可能です。
+データを取り込む際に、各ドキュメントは複数のチャンクという単位に分割されるのですが、RAG Engine では `chunk_size` と `chunk_overlap` という [2 つのパラメータ](https://cloud.google.com/vertex-ai/generative-ai/docs/rag-overview#supported-transformations)が指定可能です。
 前者は各チャンクのサイズ (トークン数) を指定するパラメータで、その際にデフォルトでは隣り合うチャンクが一部重なるように分割されます。後者のパラメータはその重複する部分のトークン数を指定します。
 
 ![](https://storage.googleapis.com/zenn-user-upload/68d437e4baec-20241223.png)
 
-一般論として、チャンクサイズを小さくすると、作成されるエンベディングにおいては粒度の高い詳細な情報まで考慮されますが、情報の網羅性は減ってしまい、関連する情報を取りこぼしてしまう可能性があります。一方でチャンクサイズを大きくすると情報の網羅性が上がるため再現率は向上しそうですが、不要な情報も含まれてしまうため、適合率は下がる可能性があります。
+一般論として、チャンクサイズを小さくすると、作成されるエンベディングにおいては粒度の高い詳細な情報まで考慮されますが、情報の網羅性は減ってしまい関連する情報を取りこぼしてしまう可能性があります。一方でチャンクサイズを大きくすると情報の網羅性が上がるため再現率は向上しそうですが、不要な情報も含まれてしまうため適合率は下がる可能性があります。
 
 RAG においてはこれらのパラメータが精度を決める上で鍵となるのですが、最適値を決めることは一概には難しく、ご自身の環境やデータに合わせてチューニングしていく必要があると考えます。
 
@@ -88,30 +89,31 @@ Google Drive のファイルフォーマットに加えて、DOCX や PPTX な�
 
 #### ベクトル DB の特徴・比較
 
-公式ドキュメント内の[各ベクトル DB の比較](https://cloud.google.com/vertex-ai/generative-ai/docs/vector-db-choices#compare-vector-database-options) を抜粋・抄訳した表は次の通りです。
+公式ドキュメント内の[各ベクトル DB の比較](https://cloud.google.com/vertex-ai/generative-ai/docs/vector-db-choices#compare-vector-database-options)を抜粋・抄訳した表は次の通りです。
 
 | ベクトル DB | 特徴 | 距離指標 | 検索タイプ | ステージ |
 |---|---|---|---|---|
-| `RagManagedDb` (デフォルト) | 一貫性と高可用性を提供するリージョン分散型のスケーラブルなデータベースサービスです。<br>セットアップ不要なためクイックスタートや小規模なユースケースに適しています。 | `cosine` | KNN | Preview |
-| [Pinecone](https://cloud.google.com/vertex-ai/generative-ai/docs/use-pinecone) | フルマネージドのクラウドネイティブベクトルデータベースです。<br>スケーラビリティとパフォーマンスに優れており、フィルタリングやメタデータ検索などの高度な機能を備えたベクトル検索が可能です。 | `cosine`<br>`euclidean`<br>`dot-product` | ANN | GA |
-| [Weaviate](https://cloud.google.com/vertex-ai/generative-ai/docs/use-weaviate-db) | 柔軟性とモジュール性を重視したオープンソースのベクトルデータベースです。<br>さまざまなデータ型をサポートし、組み込みのグラフ機能も提供しています。<br>テキストや画像など、さまざまなデータ型とモジュールをサポートしています。 | `cosine`<br>`dot-product`<br>`L2 squared`<br>`hamming`<br>`manhattan` | ANN + Hybrid Search | Preview |
-| [Vector Search](https://cloud.google.com/vertex-ai/generative-ai/docs/use-vertexai-vector-search) | スケーラビリティと信頼性が高く機械学習タスクに最適化された Vertex AI 内のベクトルデータベースサービスです。 | `cosine`<br>`dot-product` | ANN | GA |
-| [Feature Store](https://cloud.google.com/vertex-ai/generative-ai/docs/use-feature-store-with-rag) | ベクトル検索機能を備えた Vertex AI 内の特徴量ストアです。 BigQuery と直接統合されており、シームレスに同期が可能です。 | `cosine`<br>`dot-product`<br>`L2 squared` | ANN | Preview |
+| `RagManagedDb` (デフォルト) | 一貫性と高可用性を提供するリージョン分散型のスケーラブルなデータベースサービス。<br>セットアップ不要なためクイックスタートやライトなユースケースに最適。 | `cosine` | KNN | Preview |
+| [Pinecone](https://cloud.google.com/vertex-ai/generative-ai/docs/use-pinecone) | フルマネージドのクラウドネイティブベクトルデータベース。<br>スケーラビリティとパフォーマンスに優れておりフィルタリングやメタデータ検索などの高度な機能を備えたベクトル検索が可能。 | `cosine`<br>`euclidean`<br>`dot-product` | ANN | GA |
+| [Weaviate](https://cloud.google.com/vertex-ai/generative-ai/docs/use-weaviate-db) | 柔軟性とモジュール性を重視したオープンソースのベクトルデータベース。<br>テキストや画像など様々なデータ型とモジュールをサポートし組み込みのグラフ機能も提供。 | `cosine`<br>`dot-product`<br>`L2 squared`<br>`hamming`<br>`manhattan` | ANN + Hybrid Search | Preview |
+| [Vector Search](https://cloud.google.com/vertex-ai/generative-ai/docs/use-vertexai-vector-search) | スケーラビリティと信頼性が高く機械学習タスクに最適化された Vertex AI 内のベクトルデータベースサービス。 | `cosine`<br>`dot-product` | ANN | GA |
+| [Feature Store](https://cloud.google.com/vertex-ai/generative-ai/docs/use-feature-store-with-rag) | ベクトル検索機能を備えた Vertex AI 内の特徴量ストア。<br>BigQuery と直接統合されておりシームレスに同期が可能。 | `cosine`<br>`dot-product`<br>`L2 squared` | ANN | Preview |
 
-デフォルトの RAG マネージド DB では `KNN` のみのサポートですが、社内のドキュメント検索などデータ件数がそこまで多くないライトなユースケースであれば十分に適用できる用途も多いかと考えています。デフォルト以外を利用する場合は事前に各ベクトル DB のセットアップおよび認証周りの設定が必要となります。
+デフォルトの `RagManagedDb` では `KNN` のみをサポートしていますが、社内のドキュメント検索などデータ件数がそこまで多くないライトなユースケースであれば十分に活用できる場面も多いのではと考えています。Weaviate および Pinecone を選択される場合は何れも Google Cloud Marketplace 経由で購入いただけます。
 
-尚、Weaviate および Pinecone は何れも Google Cloud Marketplace から購入いただけます。
+尚、デフォルト以外を利用する場合は、各ベクトル DB のセットアップおよび認証周りの設定が事前に必要となります。
 
 余談ですが、[Feature Store](https://cloud.google.com/vertex-ai/generative-ai/docs/use-feature-store-with-rag) および [Vector Search](https://cloud.google.com/vertex-ai/generative-ai/docs/use-vertexai-vector-search) のドキュメントに  `RAG Engine uses a built-in vector database powered by Spanner to store and manage vector representations of text documents.` と説明があることから、組み込みの RAG マネージド DB は Spanner がバックエンドになっていることが分かります。(もちろんユーザーは Spanner のレイヤを意識する必要はありません)
 
 ### 回答生成モデル (LLM) の選択
 
 これまで Gemini 前提で説明してきましたが、[Gemini モデル](https://cloud.google.com/vertex-ai/generative-ai/docs/supported-rag-models#supported-gemini-models)に加えて、RAG Engine では Model Garden 上の全てのモデルをサポートしています。
+
 Vertex AI エンドポイントに[セルフデプロイした OSS モデル](https://cloud.google.com/vertex-ai/generative-ai/docs/supported-rag-models#self-deployed-models)、または Mistral や Llama などの [MaaS (Model as a Service)](https://cloud.google.com/vertex-ai/generative-ai/docs/supported-rag-models#models-with-managed-apis) も選択可能です。
 
 ## 実際に試してみよう
 
-RAG Engine API (Python SDK) および Vertex AI Studio (GUI) 経由で RAG Engine を利用する流れを解説いたします。
+RAG Engine API (Python SDK) および Vertex AI Studio (GUI) 経由で RAG Engine を実際に試してみましょう。
 
 :::message
 本記事内のサンプルコードは全て [Colab Enterprise](https://cloud.google.com/colab/docs/introduction) 上での実行結果となります。
@@ -119,14 +121,14 @@ RAG Engine API (Python SDK) および Vertex AI Studio (GUI) 経由で RAG Engin
 
 ### RAG Engine API を利用した RAG コーパス作成＆クエリ実行
 
-事前にデータを準備する必要がありますが、インポートするデータの格納用として GCS バケットを作成します。
+事前にデータを準備する必要があるため、データの格納用として GCS バケットを作成します。
 
 ```python
 BUCKET_NAME = "MY-BUCKET-NAME"  # Replace with your actual bucket name
 ! gcloud storage buckets create gs://$BUCKET_NAME --location=us-central1
 ```
 
-今回利用するデータは RAG Engine の公式ドキュメント 17 ページを HTML ファイルとして保存します。具体的には次の Python コードを実行して HTML を GCS バケットに保存します。
+今回利用するデータは RAG Engine の公式ドキュメント 17 ページを HTML ファイルとして保存します。具体的には次の Python コードを実行して HTML を取得してファイルを GCS バケットに保存します。
 
 ```python
 urls = [
@@ -172,7 +174,8 @@ for url in urls:
     f.write(response.text)
 ```
 
-データの準備ができたので Vertex AI Python SDK 経由で RAG Engine API を利用していきます。念のため SDK を最新版にアップデートします。
+データが準備できましたので Vertex AI Python SDK 経由で RAG Engine API を実行していきます。
+念のため SDK を最新版にアップデートしておきます。
 
 ```python
 ! pip install -U google-cloud-aiplatform
@@ -192,10 +195,9 @@ display_name = "rag_engine_doc_corpus"
 vertexai.init(project=PROJECT_ID, location="us-central1")
 ```
 
-事前準備が整ったので、ここから RAG Engine 関連のリソースを作成してきます。
-
-はじめに RAG コーパスを作成するのですが、その際に利用するエンベディングモデルやベクトル DB も指定します。
-今回ベクトル DB はデフォルトの `RagManagedDb` を利用しますので明示的には何も設定していません。エンベディングモデルについても特に指定しなくてもデフォルトの `text-embedding-004` が自動で選択されるのですが、今回はあえて明示的に指定しています。
+ここから RAG Engine 関連のリソースを作成していきます。
+はじめに RAG コーパスを作成しますが、この際に使用するエンベディングモデルやベクトル DB を指定することが可能です。
+今回ベクトル DB はデフォルトの `RagManagedDb` を利用しますので明示的には何も指定していません。エンベディングモデルについても特に指定しない場合はデフォルトの `text-embedding-004` が自動で選択されるのですが、今回はあえて明示的に指定しています。
 
 ```python
 # Create a RAG Corpus
@@ -244,8 +246,8 @@ rag.import_files(
 imported_rag_files_count: 17
 ```
 
-ここまでに RAG コーパスに対してクエリが送信できる状態になりました。
-実際に RAG を実行する前に RAG Engine API の `retrieval_query` というメソッドを利用して、`What is RAG Engine?` というクエリを送信した際の、検索結果 (コンテキスト) を見てみましょう。
+RAG コーパスに対してクエリが送信できる状態になりました。
+RAG Engine API の `retrieval_query` というメソッドを利用して、`What is RAG Engine?` というクエリに対しての検索結果を見てみます。
 
 ```python
 # Retrieve relevant contexts
@@ -342,9 +344,9 @@ contexts {
 
 質問と関連性の高い上位 10 件 (`top_k` で指定した件数) のコンテキストが抽出されていました。尚、HTML もきちんとパースされているように見えます。
 
-RAG の検索ツールが作成できましたので、今回の主題である Gemini API と組み合わせた RAG を実行します。
+いよいよ今回の主題である RAG Engine + Gemini API を組み合わせた RAG を実行していきます。
 
-先ほどは `retrieval_query` メソッドで RAG コーパスに対して直接クエリを送信しましたが、実際に利用する際には、RAG 検索ツールを作成 (定義) した上で、Gemini へのリクエスト送信時にツールを指定することで RAG を実行することができます。
+先ほどは `retrieval_query` メソッドで RAG コーパスに対して直接クエリを送信しましたが、実際にアプリケーションに組み込む際には、RAG 検索ツールを作成 (定義) した上で、Gemini へのリクエスト送信時に同ツールを指定することで RAG を実行することができます。
 
 ```python
 # Enhance generation
@@ -371,7 +373,7 @@ rag_model = GenerativeModel(
 response = rag_model.generate_content("What are the default values for chunk_size and chunk_overlap?")
 ```
 
-今回クエリには、より具体的な `What are the default values for chunk_size and chunk_overlap?` という質問を送信してみます。
+今回クエリには `What are the default values for chunk_size and chunk_overlap?` というより具体的な質問を送信してみます。
 
 ```
 The default chunk size is 1,024 tokens, and the default chunk overlap is 200 tokens.
@@ -383,11 +385,11 @@ The default chunk size is 1,024 tokens, and the default chunk overlap is 200 tok
 
 これまで RAG Engine API を利用して RAG コーパスの作成および RAG を実行する方法を解説しましたが、この度の GA に伴い、Vertex AI Studio (GUI) 経由でも RAG Engine を利用することが可能となりました。
 
-具体的には AI Studio の右側のメニューから`グラウンディング`を有効にし、`カスタマイズ`を選択すると RAG Engine ならびに作成した RAG コーパスが選択できるようになっています。
+具体的には AI Studio の右側のメニューから`グラウンディング`を有効にし、`カスタマイズ`を選択すると RAG Engine ならびに先ほど作成した RAG コーパスが選択できるようになっています。
 
 ![](https://storage.googleapis.com/zenn-user-upload/b61dbb8baba5-20241223.gif)
 
-`Top-k Similarity` の件数や `Vector Distance Threshold` または `Vector Similarity Threshold` のフィルタ条件・閾値もこちらの画面上で調整が可能となっています。
+また `Top-k Similarity` の件数や `Vector Distance Threshold` or `Vector Similarity Threshold` のフィルタ条件・閾値もこちらの画面上で設定が可能となっています。
 
 ## まとめ
 
