@@ -3,7 +3,7 @@ title: "GA になった RAG Engine で Gemini がもっと賢くなる！"
 emoji: "📑"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["tech", "googlecloud", "gemini", "vertexai", "rag"]
-published: false
+published: true
 ---
 [Google Cloud Japan Advent Calendar 2024](https://zenn.dev/google_cloud_jp/articles/7799cce9f23cf0) Gemini 特集版 25 日目です。
 
