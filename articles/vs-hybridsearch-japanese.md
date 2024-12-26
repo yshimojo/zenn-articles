@@ -229,11 +229,11 @@ corpus_ja = df.content.tolist()
 
 |    | title           | url                                                        | content                                                                     |
 |----|--------------------|-------------------------------------------------------------|-----------------------------------------------------------------------------|
-| 0  | 北海道の観光地     | [https://ja.wikipedia.org/wiki/%E5%8C%97%E6%B5%...](https://ja.wikipedia.org/wiki/%E5%8C%97%E6%B5%...) | 北海道の観光地（ほっかいどうのかんこうち）は、北海道内の主要な観光地に関する項目である。「北... |
-| 1  | 青森県の観光地     | [https://ja.wikipedia.org/wiki/%E9%9D%92%E6%A3%...](https://ja.wikipedia.org/wiki/%E9%9D%92%E6%A3%...) | 青森県の観光地（あおもりけんのかんこうち）は、青森県内の主要な観光地等に関する項目である。\... |
-| 2  | 岩手県の観光地     | [https://ja.wikipedia.org/wiki/%E5%B2%A9%E6%89%...](https://ja.wikipedia.org/wiki/%E5%B2%A9%E6%89%...) | 岩手県の観光地（いわてけんのかんこうち）は、岩手県内の主要な観光地等に関する項目である。\n... |
-| 3  | 秋田県の観光地     | [https://ja.wikipedia.org/wiki/%E7%A7%8B%E7%94%...](https://ja.wikipedia.org/wiki/%E7%A7%8B%E7%94%...) | 秋田県の観光地（あきたけんのかんこうち）は、秋田県内の主要な観光地等に関する項目である。\n... |
-| 4  | 宮城県の観光地     | [https://ja.wikipedia.org/wiki/%E5%AE%AE%E5%9F%...](https://ja.wikipedia.org/wiki/%E5%AE%AE%E5%9F%...) | 宮城県の観光地（みやぎけんのかんこうち）は、宮城県内の主要な観光地等に関する項目である。\n... |
+| 0  | 北海道の観光地     | [https://ja.wikipedia.org/wiki/%E5%8C%97%E6%B5%...](https://ja.wikipedia.org/wiki/%E5%8C%97%E6%B5%B7%E9%81%93%E3%81%AE%E8%A6%B3%E5%85%89%E5%9C%B0) | 北海道の観光地（ほっかいどうのかんこうち）は、北海道内の主要な観光地に関する項目である。「北... |
+| 1  | 青森県の観光地     | [https://ja.wikipedia.org/wiki/%E9%9D%92%E6%A3%...](https://ja.wikipedia.org/wiki/%E9%9D%92%E6%A3%AE%E7%9C%8C%E3%81%AE%E8%A6%B3%E5%85%89%E5%9C%B0) | 青森県の観光地（あおもりけんのかんこうち）は、青森県内の主要な観光地等に関する項目である。\... |
+| 2  | 岩手県の観光地     | [https://ja.wikipedia.org/wiki/%E5%B2%A9%E6%89%...](https://ja.wikipedia.org/wiki/%E5%B2%A9%E6%89%8B%E7%9C%8C%E3%81%AE%E8%A6%B3%E5%85%89%E5%9C%B0) | 岩手県の観光地（いわてけんのかんこうち）は、岩手県内の主要な観光地等に関する項目である。\n... |
+| 3  | 秋田県の観光地     | [https://ja.wikipedia.org/wiki/%E7%A7%8B%E7%94%...](https://ja.wikipedia.org/wiki/%E7%A7%8B%E7%94%B0%E7%9C%8C%E3%81%AE%E8%A6%B3%E5%85%89%E5%9C%B0) | 秋田県の観光地（あきたけんのかんこうち）は、秋田県内の主要な観光地等に関する項目である。\n... |
+| 4  | 宮城県の観光地     | [https://ja.wikipedia.org/wiki/%E5%AE%AE%E5%9F%...](https://ja.wikipedia.org/wiki/%E5%AE%AE%E5%9F%8E%E7%9C%8C%E3%81%AE%E8%A6%B3%E5%85%89%E5%9C%B0) | 宮城県の観光地（みやぎけんのかんこうち）は、宮城県内の主要な観光地等に関する項目である。\n... |
 
 ### 疎ベクトル (Sparse Vector) 取得関数を定義
 
