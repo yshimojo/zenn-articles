@@ -9,7 +9,7 @@ published: true
 
 こんにちは、カスタマーエンジニアの下門 (しもじょう) です。
 
-2024 年は RAG (Retrieval-Augmented Generation) が非常に盛り上がりましたが、そんな年の締めくくりに Vertex AI の [RAG Engine](https://cloud.google.com/vertex-ai/generative-ai/docs/rag-overview) というサービスが GA (正式版) になりましたので RAG Engine + Gemini API を利用して簡単に RAG を構成する方法を紹介いたします。
+2024 年は RAG (Retrieval-Augmented Generation) が非常に盛り上がりましたが、そんな年の締めくくりに Vertex AI の [RAG Engine](https://cloud.google.com/vertex-ai/generative-ai/docs/rag-overview) というサービスが [GA (正式版)](https://cloud.google.com/vertex-ai/docs/release-notes#a785ff54) になりましたので RAG Engine + Gemini API を利用して簡単に RAG を構成する方法を紹介いたします。
 
 :::message
 本記事の執筆時点で GA となっているのは `us-central1` リージョンを利用した場合のみとなります。`europe-west3` リージョンでは引き続き Preview のステータスとなります。([Supported regions](https://cloud.google.com/vertex-ai/generative-ai/docs/rag-overview?hl=en#supported-regions))
