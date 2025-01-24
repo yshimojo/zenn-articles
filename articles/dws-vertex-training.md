@@ -32,7 +32,7 @@ DWS が向いているユースケースとしては以下などが挙げられ�
 - A100 GPU や H100 GPU など需要の大きいハイエンドな GPU リソースが必要なジョブ
 - 複数のワーカーノードが同時にプロビジョニングされる必要のある分散トレーニングジョブ
 - ファインチューニングジョブ (7 日以内に完了するもの)
-- オフラインバッチ推論ジョブ
+- リアルタイム性の必要のないジョブ (オフラインバッチ推論など)
 
 逆に向いていないユースケースとしては以下などが挙げられます。
 - 大規模な基盤モデルの事前学習 (Fex Start モードの最大実行時間が [7 日まで](https://cloud.google.com/vertex-ai/docs/training/schedule-jobs-dws#requirements)のため)
@@ -42,11 +42,11 @@ DWS が向いているユースケースとしては以下などが挙げられ�
 
 昨今の世界的な GPU 需要の増加に伴い「自社の機械学習プロジェクトのために GPU を必要な時に即座に活用できるようリソースを確保しておきたい！」といったニーズは依然として非常に高いのではないでしょうか。
 
-Google Cloud 上で GPU リソースのキャパシティを確実に確保するためのソリューションとしては、[Compute Engine の予約](https://cloud.google.com/compute/docs/instances/reservations-overview)が提供されており、[2024 年 12 月のリリース](https://cloud.google.com/vertex-ai/docs/release-notes#af2308f3)で Vertex AI でも利用できるようになりました。
+Google Cloud 上で GPU リソースのキャパシティを確実に確保するためのソリューションとしては、[Compute Engine の予約](https://cloud.google.com/compute/docs/instances/reservations-overview)が提供されており、[2024 年 12 月のリリース](https://cloud.google.com/vertex-ai/docs/release-notes#af2308f3)で Vertex AI でも利用できるようになりました。しかし、予約は常にコストが発生するため、GPU を確保していても、GPU を使用していないアイドル時間が発生すると、無駄なコストが発生してしまう可能性があります。
 
-一方で Vertex AI Training はトレーニングジョブが開始すると必要なワーカーを起動し、終了すると自動的にワーカーを終了しますので、本来は必要な時に必要な分だけリソースを確保できるコスト効率の高いアプローチです。
+一方で Vertex AI Training は本来トレーニングジョブが開始すると必要なワーカーを起動し、終了すると自動的にワーカーを終了しますので、GPU インスタンスの使用状況に合わせて課金され、アイドル時間のコストを削減できるというメリットがあります。しかし、予約をしているわけではないため、必要な時に GPU が取得できない可能性があります。
 
-そこで Vertex AI のコスト効率の高さの恩恵を受けつつ GPU リソースの取得可能性を向上させる仕組みが DWS となります。この点で DWS は Vertex AI と非常に相性が良い機能だと言えます。
+そこで Vertex AI のコスト効率の高さの恩恵を受けつつ GPU リソースの取得可能性を向上させる仕組みが DWS となります。DWS は予約とオンデマンドの両方の利点を兼ね備えており、この点で Vertex AI と非常に相性が良い機能だと言えます。
 
 ### 通常の Vertex AI Training との違い
 
@@ -69,7 +69,7 @@ GPU リソースをリクエストする際には、十分な Quota が事前に
 
 Google Cloud に精通されている方ほど、「プリエンプティブル」と聞くと、通常料金より安価に利用できるプリエンプティブル VM (現 Spot VM) を思い浮かべるかもしれません。しかし、**DWS では、Quota 上はプリエンプティブル Quota を使用しますが、料金は通常のオンデマンド料金が適用されます。** この点は少し分かりづらいので十分にご注意ください。
 
-今回は H100 GPU を 8 個搭載した `a3-highgpu-8g` インスタンスを利用しますので、リージョンは `us-central1` 指定して、割り当て量を `8` に変更して引き上げ申請を行います。
+今回は H100 GPU を 8 個搭載した `a3-highgpu-8g` インスタンスを利用しますので、リージョンは `us-central1` を指定して、割り当て量を `8` に変更して引き上げ申請を行います。
 
 ![](https://storage.googleapis.com/zenn-user-upload/7ff4b8bb72b8-20250120.png)
 
@@ -116,16 +116,14 @@ Quota の引き上げ申請が承認されるまでに数営業日かかるこ�
 
 上記のコードスニペットより、`accelerator_type` が `NVIDIA_H100_80GB` の場合は DWS を利用し、また、[CustomContainerTrainingJob.run](https://cloud.google.com/python/docs/reference/aiplatform/latest/google.cloud.aiplatform.CustomContainerTrainingJob#google_cloud_aiplatform_CustomContainerTrainingJob_run) 実行時に DWS に関する次のパラメータを指定していることが分かります。
 - **max_wait_duration**: 要求したリソースがプロビジョニングされるまでの最大待機時間 (秒単位)。デフォルトは 30 分
-- **scheduling_strategy**: DWS (Flex モード) を利用する場合には `gca_custom_job_compat.Scheduling.Strategy.FLEX_START` を指定
-
-<!-- ちなみに [Vertex AI Pipelines](https://cloud.google.com/vertex-ai/docs/pipelines/introduction) 経由でも [CustomTrainingJobOp コンポーネント](https://google-cloud-pipeline-components.readthedocs.io/en/google-cloud-pipeline-components-2.18.0/api/v1/custom_job.html#v1.custom_job.CustomTrainingJobOp)の [strategy](https://google-cloud-pipeline-components.readthedocs.io/en/google-cloud-pipeline-components-2.18.0/api/v1/custom_job.html#v1.custom_job.CustomTrainingJobOp.strategy) に `FLEX_START` を指定できそうに見えます。 -->
+- **scheduling_strategy**: DWS (Flex Start モード) を利用する場合には `gca_custom_job_compat.Scheduling.Strategy.FLEX_START` を指定
 
 ここまででジョブを実行する準備が整いましたのでノートブック内の **Finetune** のセルまで順番に実行していきます。(今回は DWS の動作を確認するのが目的のため、後半の **Deploy** および **Predict** のセル実行は割愛します)
 
 ### Vertex AI Custom Training jobs を確認
 
 ノートブック上で Finetune ジョブを実行したら、Cloud Console の `Vertex AI` > `トレーニング` > `カスタムジョブ`の画面に遷移してジョブが作成されていることを確認します。
-この時点ではステータスが `保留 (Pending)` となっております。
+この時点ではステータスが `保留` / `Pending` となっております。
 
 ![](https://storage.googleapis.com/zenn-user-upload/74c9cf01f5ff-20250120.png)
 
@@ -154,7 +152,7 @@ TensorBoard 用のログが GCS に出力されていますので、Cloud Shell 
 tensorboard --logdir gs://BUCKET_NAME/temporal/gemma2-lora-train-20250117-XXXXXX/logs
 ```
 
-無事に学習が収束しているようです。
+学習も問題なく収束していました。
 
 ![](https://storage.googleapis.com/zenn-user-upload/8579f730ef9b-20250120.png)
 
@@ -166,7 +164,7 @@ tensorboard --logdir gs://BUCKET_NAME/temporal/gemma2-lora-train-20250117-XXXXXX
 
 ## まとめ
 
-DWS on Vertex AI は Vertex AI の従量課金制の恩恵を受けながら需要の高い GPU リソースの取得可能性を向上させるリソース管理の仕組みで、特に次のような方にはおすすめです！
+DWS on Vertex AI は Vertex AI の従量課金の恩恵を受けながら需要の高い GPU リソースの取得可能性を向上させるリソース管理の仕組みで、特に次のような方にはおすすめです！
 - 自社のビジネス/ユースケースに最適化する目的で OSS の基盤モデルのファインチューニング (LoRA など) を気軽に実行したい方
 - これまでリソース確保容易性やコスト効率の問題で旧世代の GPU (T4, V100, etc.) を中心に利用していたが、より Perf/$ の高い新しい世代の GPU (A100, H100, etc.) を活用されたい方
 
