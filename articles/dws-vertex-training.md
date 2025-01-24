@@ -3,7 +3,7 @@ title: "Dynamic Workload Scheduler on Vertex AI Training で NVIDIA H100 を確�
 emoji: "🕐"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["googlecloud", "vertexai", "機械学習", "gpu", "llm"]
-published: false
+published: true
 ---
 
 こんにちは、カスタマーエンジニアの下門 (しもじょう) です。
