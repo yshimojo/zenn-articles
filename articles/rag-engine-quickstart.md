@@ -199,12 +199,19 @@ vertexai.init(project=PROJECT_ID, location="us-central1")
 はじめに RAG コーパスを作成しますが、この際に使用するエンベディングモデルやベクトル DB を指定することが可能です。
 今回ベクトル DB はデフォルトの `RagManagedDb` を利用しますので明示的には何も指定していません。エンベディングモデルについても特に指定しない場合はデフォルトの `text-embedding-004` が自動で選択されるのですが、今回はあえて明示的に指定しています。
 
+:::message
+**2025/05/23 追記**
+`RagEmbeddingModelConfig` クラス内でエンベディングモデルを指定する方法を修正しました。
+:::
+
 ```python
 # Create a RAG Corpus
 
 # Configure embedding model, for example "text-embedding-004".
 rag_embedding_model_config = rag.RagEmbeddingModelConfig(
-    vertex_prediction_endpoint=f"projects/{PROJECT_ID}/locations/us-central1/publishers/google/models/text-embedding-004"
+    rag.VertexPredictionEndpoint(
+        publisher_model=f"projects/{PROJECT_ID}/locations/us-central1/publishers/google/models/text-embedding-004"
+    )
 )
 
 # Create RagCorpus
