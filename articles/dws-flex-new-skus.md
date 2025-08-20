@@ -1,5 +1,5 @@
 ---
-title: "ハイエンド GPU が最大約半額に！DWS の新料金プランで GPU コストを大幅削減"
+title: "Vertex AI のハイエンド GPU が最大約半額に！DWS の新料金プランで GPU コストを大幅削減"
 emoji: "💰"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["googlecloud", "gpu", "vertexai", "gce", "機械学習"]
@@ -8,7 +8,7 @@ published: false
 
 ## TL;DR
 
-DWS Flex-Start の新料金プラン (新 SKUs) により、Google Cloud のハイエンド GPU を搭載したアクセラレータ最適化 VM が、オンデマンドの**最大約半額**で利用可能になりました。
+DWS Flex-Start の新料金プラン (新 SKUs) により、Vertex AI で利用可能な Google Cloud のハイエンド GPU を搭載したアクセラレータ最適化 VM が、オンデマンドの**最大約半額**で利用可能になりました。
 AI 開発者にとっては、これまで高価で手が出しにくかった、パワフルなハイエンド GPU を利用した学習や推論をより気軽に試せるようになりました。
 
 本記事では、[Vertex AI Model Garden 経由で利用可能な Gemma 3](https://cloud.google.com/vertex-ai/generative-ai/docs/open-models/use-gemma#use-in-vertex-ai) を利用して、実際に Vertex AI の Custom Training と Online Prediction をそれぞれ実行し、オンデマンドと DWS Flex-Start の料金を比較します。
@@ -110,7 +110,7 @@ train_job.run(
 
 ![vai_training_od_billing_report](https://storage.googleapis.com/zenn-user-upload/a1e7124e9277-20250816.png)
 
-上記のレポートには今回実際に掛かった費用が含まれていますが、費用はジョブの実行時間によって変動するため、今回は実際に発生した費用を直接見比べるのではなく、対象となる課金項目 (SKU) を特定し、それらを元に 1 時間あたりの費用を再計算したもので料金比較をしていきたいと思います。
+上記のレポートには今回実際に掛かった費用が含まれていますが、これらの費用はジョブの実行時間によって変動するため、今回は実際に発生した費用を直接見比べるのではなく、対象となる課金項目 (SKU) を特定し、それらを元に 1 時間あたりの費用を再計算したもので料金比較をしていきたいと思います。
 
 具体的には、オンデマンドの料金を SKU 単位で 1 時間あたりに換算して再計算します。[^2]
 
@@ -260,7 +260,7 @@ Prediction においても DWS Flex-Start 利用時には、オンデマンド�
 ## 最後に
 
 - DWS Flex-Start を実際に試される際には、制約や要件 ([Training](https://cloud.google.com/vertex-ai/docs/training/schedule-jobs-dws#requirements) / [Prediction](https://cloud.google.com/vertex-ai/docs/predictions/use-flex-start-vms#limitations)) についても事前にご確認いただいた上でご利用ください。
-- 今回は Vertex AI を利用した解説をしましたが、[GCE](https://cloud.google.com/compute/docs/instance-groups/about-resize-requests-mig) や [GKE](https://cloud.google.com/kubernetes-engine/docs/concepts/dws) Standard を活用して Vertex AI 以外から DWS Flex-Start を利用する際も DWS の新料金の恩恵を受けることができます。その場合 Vertex AI における管理手数料が発生しないため、より深い割引率で利用することが可能です。
+- 今回は Vertex AI を利用した解説をしましたが、[GCE](https://cloud.google.com/compute/docs/instance-groups/about-resize-requests-mig) や [GKE](https://cloud.google.com/kubernetes-engine/docs/concepts/dws) を活用して Vertex AI 以外から DWS Flex-Start を利用する際も DWS の新料金の恩恵を受けることができます。その場合 Vertex AI における管理手数料が発生しないため、より深い割引率で利用することが可能です。
 - マシンタイプやリージョンによっては割引率が異なることもありますので、実際に利用する際には、以下の SKU グループ等を参照して事前に費用を試算いただくことをお勧めします。
 
 **Compute Engine SKU Groups**
