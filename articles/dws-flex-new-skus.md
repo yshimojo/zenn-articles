@@ -3,7 +3,7 @@ title: "Vertex AI のハイエンド GPU が最大約半額に！DWS の新料�
 emoji: "💰"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["googlecloud", "gpu", "vertexai", "gce", "機械学習"]
-published: false
+published: true
 ---
 
 ## TL;DR
