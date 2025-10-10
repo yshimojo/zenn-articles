@@ -177,22 +177,40 @@ for url in urls:
 データが準備できましたので Vertex AI Python SDK 経由で RAG Engine API を実行していきます。
 念のため SDK を最新版にアップデートしておきます。
 
+:::message
+**2025/10/10 追記**
+[Vertex AI SDK の Generative AI モジュール非推奨](https://cloud.google.com/vertex-ai/generative-ai/docs/deprecations)に伴い Gen AI SDK 経由で RAG Engine を利用するコードに修正しました。
+:::
+
+
 ```python
-! pip install -U google-cloud-aiplatform
+! pip install -U google-cloud-aiplatform google-genai
+# IMPORTANT: Added the new 'google-genai' package.
 ```
 
 必要なモジュールをインポートして SDK を初期化します。
 
 ```python
+# IMPORTANT: Migrated to google.genai due to deprecation of vertexai.generative_models
+
+import os
 from vertexai import rag
-from vertexai.generative_models import GenerativeModel, Tool
+# from vertexai.generative_models import GenerativeModel, Tool
 import vertexai
+from google import genai
+from google.genai.types import GenerateContentConfig, Retrieval, Tool, VertexRagStore
 
 PROJECT_ID = "PROJECT_ID"  # Replace with your actual project ID
+LOCATION = "us-central1"
 display_name = "rag_engine_doc_corpus"
 
 # Initialize Vertex AI API once per session
-vertexai.init(project=PROJECT_ID, location="us-central1")
+vertexai.init(project=PROJECT_ID, location=LOCATION)
+
+# Set environment variables for Gen AI SDK
+os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'True'
+os.environ['GOOGLE_CLOUD_PROJECT'] = PROJECT_ID
+os.environ['GOOGLE_CLOUD_LOCATION'] = LOCATION
 ```
 
 ここから RAG Engine 関連のリソースを作成していきます。
@@ -203,6 +221,7 @@ vertexai.init(project=PROJECT_ID, location="us-central1")
 **2025/05/23 追記**
 `RagEmbeddingModelConfig` クラス内でエンベディングモデルを指定する方法を修正しました。
 :::
+
 
 ```python
 # Create a RAG Corpus
@@ -355,29 +374,63 @@ contexts {
 
 先ほどは `retrieval_query` メソッドで RAG コーパスに対して直接クエリを送信しましたが、実際にアプリケーションに組み込む際には、RAG 検索ツールを作成 (定義) した上で、Gemini へのリクエスト送信時に同ツールを指定することで RAG を実行することができます。
 
-```python
-# Enhance generation
+:::message
+**2025/10/10 追記**
+[Vertex AI SDK の Generative AI モジュール非推奨](https://cloud.google.com/vertex-ai/generative-ai/docs/deprecations)に伴い Gen AI SDK 経由で RAG Engine を利用するコードに修正しました。
+:::
 
-# Create a RAG retrieval tool
-rag_retrieval_tool = Tool.from_retrieval(
-    retrieval=rag.Retrieval(
-        source=rag.VertexRagStore(
-            rag_resources=[
-                rag.RagResource(
-                    rag_corpus=rag_corpus.name,
-                )
-            ],
-            rag_retrieval_config=rag_retrieval_config  # Optional
-        ),
+```python
+# IMPORTANT: Migrated to google.genai due to deprecation of vertexai.generative_models
+
+# NOTE: Migrated from vertexai.generative_models.Tool to google.genai.types.Tool.
+
+# # Create a RAG retrieval tool
+# rag_retrieval_tool = Tool.from_retrieval(
+#     retrieval=rag.Retrieval(
+#         source=rag.VertexRagStore(
+#             rag_resources=[
+#                 rag.RagResource(
+#                     rag_corpus=rag_corpus.name,
+#                 )
+#             ],
+#             rag_retrieval_config=rag_retrieval_config  # Optional
+#         ),
+#     )
+# )
+
+# Create a RAG retrieval tool for the RAG Corpus
+rag_retrieval_tool = Tool(
+    retrieval=Retrieval(
+        vertex_rag_store=VertexRagStore(
+            rag_corpora=[rag_corpus.name],
+            similarity_top_k=10,
+            vector_distance_threshold=0.5,
+        )
     )
 )
-# Create a gemini-flash model instance
-rag_model = GenerativeModel(
-    model_name="gemini-1.5-flash-002", tools=[rag_retrieval_tool]
-)
+
+# NOTE: Migrated from vertexai.generative_models.GenerativeModel to google.genai.Client.
+
+# # Create a gemini-flash model instance
+# rag_model = GenerativeModel(
+#     model_name="gemini-1.5-flash-002", tools=[rag_retrieval_tool]
+# )
+
+# # Generate response
+# response = rag_model.generate_content("What are the default values for chunk_size and chunk_overlap?")
+
+# Configure the Gen AI client and tools
+client = genai.Client()
+config = GenerateContentConfig(tools=[rag_retrieval_tool],)
 
 # Generate response
-response = rag_model.generate_content("What are the default values for chunk_size and chunk_overlap?")
+response = client.models.generate_content(
+    model="gemini-2.5-flash",
+    contents="What are the default values for chunk_size and chunk_overlap?",
+    config=config,
+)
+
+print(response.text)
 ```
 
 今回クエリには `What are the default values for chunk_size and chunk_overlap?` というより具体的な質問を送信してみます。
