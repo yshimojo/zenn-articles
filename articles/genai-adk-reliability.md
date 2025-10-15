@@ -10,7 +10,7 @@ published: false
 
 Gemini API をはじめとする LLM API を本番環境のサービスやシステムに組み込む際に、多くの開発者が直面する問題として、API サービスのレート制限やバックエンドのリソース不足による **429 エラー**があります。この 429 エラーに適切に対処することで、ユーザー体験を損なうことなく、サービスの安定的な稼働と信頼性を維持することができます。
 
-Vertex AI の Gemini API では、各ユーザーが利用可能なキャパシティを動的にコントロールする [Dynamic Shared Quota (DSQ)](https://cloud.google.com/vertex-ai/generative-ai/docs/dynamic-shared-quota) という仕組みを導入しており、現在は従来のような固定の Quota (上限値) は撤廃されました。一方で共有キャパシティ全体で一時的に高い需要が発生すると、一時的なリソース競合状態となり、429 "Resource Exceeded" エラーが発生することがあります。
+Vertex AI の Gemini API では、各ユーザーが利用可能なキャパシティを動的にコントロールする [Dynamic Shared Quota (DSQ)](https://cloud.google.com/vertex-ai/generative-ai/docs/dynamic-shared-quota) という仕組みを導入しており、現在は従来のような固定の Quota (上限値) は撤廃されました。一方で共有キャパシティ全体で短時間に高い需要が発生すると、一時的なリソース競合状態となり、429 "Resource Exceeded" エラーが発生することがあります。
 
 本記事では、この 429 エラーに対処するため、Gen AI SDK や ADK (Agent Development Kit) を利用した**リトライ**および**フォールバック**の実装戦略をコード実例とともに解説します。
 
@@ -64,7 +64,7 @@ client = genai.Client(
 
 `HttpRetryOptions` を引数なしで指定するとデフォルト値が適用され、引数として各パラメータを明示的に指定すると設定値をオーバーライドすることが可能です。
 
-ちなみに、[v1.28.0](https://github.com/googleapis/python-genai/releases/tag/v1.28.0) からは `generate_content` メソッド実行時に `GenerateContentConfig` の [`http_options`](https://googleapis.github.io/python-genai/genai.html#genai.types.GenerateContentConfigDict.http_options) 内で `HttpRetryOptions` を指定することで、リクエスト送信時にリトライの設定をオーバーライドすることも可能となりました。
+ちなみに、[v1.28.0](https://github.com/googleapis/python-genai/releases/tag/v1.28.0) からは `generate_content` メソッド実行時に `GenerateContentConfig` の [`http_options`](https://googleapis.github.io/python-genai/genai.html#genai.types.GenerateContentConfigDict.http_options) 内で `HttpRetryOptions` を指定することができるようになりました。これによりリクエスト送信時にリトライの設定をオーバーライドすることも可能となりました。
 
 ```python
 response = client.models.generate_content(
@@ -118,7 +118,7 @@ $$ Delay_n = min(1.0 \times 2^n + random.uniform(0, 1), 60.0)$$
 
 ADK においても [v1.9.0](https://github.com/google/adk-python/releases/tag/v1.9.0) のアップデートにて、モデルとして Gemini を利用する場合には Gen AI SDK の `HttpRetryOptions` が指定できるようになりました。こちらをご活用いただくとシンプルに実装が可能です。
 
-具体的には、次の通り `LlmAgent` オブジェクト作成時に [`Gemini`](https://google.github.io/adk-docs/api-reference/python/google-adk.html#google.adk.models.Gemini) を直接指定することで設定が可能です。
+具体的には、次の通り `LlmAgent` オブジェクト作成時に [`Gemini`](https://google.github.io/adk-docs/api-reference/python/google-adk.html#google.adk.models.Gemini) を直接指定することで設定が可能となります。
 
 ```python
 from google.adk.agents import LlmAgent
@@ -144,7 +144,9 @@ root_agent = LlmAgent(
 
 ### ADK (LiteLLM) のリトライ
 
-ADK ではLiteLLM という様々な LLM API をラップした OSS のライブラリを指定することができ、こちらを活用すると、Gemini / Vetex AI 以外の LLM API を利用することも可能となります。具体的には、[こちらのドキュメント](https://google.github.io/adk-docs/agents/models/#using-cloud-proprietary-models-via-litellm)に記載の通り `LlmAgent` のモデルとして `LiteLlm` を指定します。
+ADK では、モデルとして LiteLLM という様々な LLM API をラップした OSS のライブラリを指定することができ、こちらを活用すると、Gemini / Vetex AI 以外の LLM API を利用することも可能となります。
+
+具体的には、[こちらのドキュメント](https://google.github.io/adk-docs/agents/models/#using-cloud-proprietary-models-via-litellm)に記載の通り `LlmAgent` のモデルとして `LiteLlm` を指定します。
 
 LiteLLM では、様々な LLM API を統一されたインターフェース経由で利用することが可能なことに加えて、ビルトインのリトライやフォールバックの機能も提供しており、具体的には、[`Router`](https://docs.litellm.ai/docs/routing) (`litellm.router`) の機能を利用して、次のようにリトライを設定することができます。
 
@@ -296,7 +298,7 @@ root_agent = LlmAgent(
 
 これまで解説してきたリトライやフォールバックの実装方法が、想定した通りに機能するのか、意図的に 429 エラーを発生させて実際に確認してみましょう。
 
-とは言え、従量課金制で意図的に 429 エラーを発生させるには、同時に相当な量のトークンを処理させる必要がありますので、手元で簡単にテストすることは現実的ではありません。
+とは言え、従量課金制で意図的に 429 エラーを発生させるには、同時に膨大な量のトークンを処理させる必要がありますので、手元の環境で簡単にテストすることは現実的ではありません。
 
 そこで、あくまで意図的に 429 エラーを発生させる目的の構成として、PT の割り当てがないプロジェクト内で `X-Vertex-AI-LLM-Request-Type` HTTP ヘッダーを `dedicated` に設定してリクエストを送信することで、擬似的なリソース不足の状態を作り出し、429 エラーを発生させます。
 
@@ -619,7 +621,7 @@ LiteLLM completion() model= gemini-2.5-pro; provider = vertex_ai
 
 ## まとめ
 
-- 本記事では、LLM API の安定稼働のため、リトライとフォールバックの 2 つの戦略と、Gen AI SDK ならびに ADK を利用したそれぞれの実装方法を紹介しました。
+- 本記事では、LLM API の安定稼働のため、リトライとフォールバックの 2 つの戦略と、Gen AI SDK ならびに ADK を利用したそれぞれの実装方法を解説しました。
 - Gemini を利用したシンプルなリトライなら Gen AI SDK ならびに ADK の両方で利用できる `HttpRetryOptions` を指定するだけで、Google Cloud 推奨のジッターを伴う切り捨て型指数バックオフによるリトライ処理を簡単に実装できます。
 - ADK を利用する場合、LiteLLM を活用することで複数モデルの利用や高度なフォールバックを簡単に実装できます。
 - フォールバック先として Provisioned Throughput (PT) を用意しておくことで、コスト効率と安定性を両立させることが可能です。
