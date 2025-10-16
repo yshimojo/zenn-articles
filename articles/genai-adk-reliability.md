@@ -3,7 +3,7 @@ title: "Gen AI SDK & ADK で実装する 429 エラーのリトライ＆フォ�
 emoji: "🔁"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["gemini", "claude", "vertexai", "adk", "python"]
-published: false
+published: true
 ---
 
 ## はじめに
