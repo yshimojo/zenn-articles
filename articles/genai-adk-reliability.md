@@ -18,7 +18,7 @@ Vertex AI の Gemini API では、各ユーザーが利用可能なキャパシ�
 本記事では Python 版の Gen AI SDK および ADK を使用した実装例を解説します。他の言語の SDK をご利用の方は、エラー対処の考え方としてご参考ください。
 :::
 
-## 429 エラーの回避方法
+## 429 エラーの回避・対処方法
 
 Vertex AI の Gemini API を利用する際に 429 エラーを解決する方法として、[公式ドキュメント](https://cloud.google.com/vertex-ai/generative-ai/docs/provisioned-throughput/error-code-429)では次の方法が推奨されております。
 - [Provisioned Throughput](https://cloud.google.com/vertex-ai/generative-ai/docs/provisioned-throughput) (PT) の利用
@@ -33,7 +33,7 @@ Vertex AI の Gemini API を利用する際に 429 エラーを解決する方�
 
 Google Cloud では、API へのリクエストをリトライする際のベストプラクティスとして、ジッターを伴う[切り捨て型指数バックオフ](https://cloud.google.com/iam/docs/retry-strategy#overview)を使用することを推奨しております。これは、以下の 3 つの要素を組み合わせた堅牢なリトライ戦略です。
 
-- **指数バックオフ(Exponential Backoff)**: リトライを繰り返すたびに、待機時間を指数関数的に長くしていく方式です。429 エラーのように一時的な負荷が原因の場合、リトライの集中を避けて API バックエンドの負荷を軽減する効果があります。
+- **指数バックオフ (Exponential Backoff)**: リトライを繰り返すたびに、待機時間を指数関数的に長くしていく方式です。429 エラーのように一時的な負荷が原因の場合、リトライの集中を避けて API バックエンドの負荷を軽減する効果があります。
 - **切り捨て型 (Truncated)**: 待機時間が増え続けないように、上限値 (最大バックオフ時間) を設ける仕組みです。これにより、リトライ間隔が非現実的な長さになることを防ぎます。
 - **ジッター (Jitter)**: 各待機時間に短いランダムな遅延を追加する手法です。エラーを検知した複数のクライアントが全く同じタイミングでリトライを再開すると、再び負荷が集中する「[Thundering Herd 問題](https://en.wikipedia.org/wiki/Thundering_herd_problem)」を引き起こす可能性があります。ジッターは、このリトライのタイミングを意図的にずらすことで問題を回避します。
 
@@ -84,12 +84,12 @@ response = client.models.generate_content(
 
 $n$ 回目のリトライまでの待機時間 $Delay_n$ を表す計算式と各パラメータの意味は次の通りとなります。
 
-$$ \small Delay_n = min(initial\_delay \times exp\_base^n + random.uniform(0, jitter), max\_delay)) $$
+$$ \small Delay_n = min(initial\_delay \times exp\_base^n + random.uniform(0, jitter), max\_delay) $$
 
 | パラメータ | 説明 |
 | :--- | :--- |
 | `attempts` | 初回リクエストを含む総試行回数 |
-| `n` | リトライ回数 ($0 \le n \le \text{attempts} - 2$) |
+| `n` | リトライ回数<br>($0 \le n \le \text{attempts} - 2$) |
 | `initial_delay` | 初回リトライまでの待機時間 (秒) |
 | `exp_base` | 指数関数の底 |
 | `jitter` | ランダムな遅延 (秒)<br>`0` から `jitter` までの範囲で乱数を加算 |
@@ -103,22 +103,22 @@ $$ \small Delay_n = min(initial\_delay \times exp\_base^n + random.uniform(0, ji
 
 $$ Delay_n = min(1.0 \times 2^n + random.uniform(0, 1), 60.0)$$
 
-デフォルト値では `attempts=5` が設定されておりますが、前述の通り、こちらには初回リクエストが含まれるため、実際のリトライ回数は `4 回`となります。
+デフォルト値では `attempts=5` が設定されておりますが、前述の通り、こちらには初回リクエストが含まれるため、実際のリトライ回数は `4` 回となります。
 
 まとめると、デフォルト値における各リトライごとのバックオフ時間とジッターによるランダム値を含めた待機時間は次の通りとなります。($n$ の初期値 = `0`)
 
 | リトライ回数 (n) | バックオフ時間 | ジッター (乱数) | 待機時間 |
 | ---- | ---- | ---- | ---- |
-| 0 | 1 | 0.0 ~ 1.0 秒 | 1.0 ~ 2.0 秒 |
-| 1 | 2 | 0.0 ~ 1.0 秒 | 2.0 ~ 3.0 秒 |
-| 2 | 4 | 0.0 ~ 1.0 秒 | 4.0 ~ 5.0 秒 |
-| 3 | 8 | 0.0 ~ 1.0 秒 | 8.0 ~ 9.0 秒 |
+| 0 | 1 秒 | 0.0 ~ 1.0 秒 | 1.0 ~ 2.0 秒 |
+| 1 | 2 秒 | 0.0 ~ 1.0 秒 | 2.0 ~ 3.0 秒 |
+| 2 | 4 秒 | 0.0 ~ 1.0 秒 | 4.0 ~ 5.0 秒 |
+| 3 | 8 秒 | 0.0 ~ 1.0 秒 | 8.0 ~ 9.0 秒 |
 
 ### ADK (Gemini) のリトライ
 
-ADK においても [v1.9.0](https://github.com/google/adk-python/releases/tag/v1.9.0) のアップデートにて、モデルとして Gemini を利用する場合には Gen AI SDK の `HttpRetryOptions` が指定できるようになりました。こちらをご活用いただくとシンプルに実装が可能です。
+ADK においても [v1.9.0](https://github.com/google/adk-python/releases/tag/v1.9.0) からは、モデルに Gemini を利用する場合には Gen AI SDK の `HttpRetryOptions` が指定できるようになりました。こちらをご活用いただくとシンプルに実装が可能です。
 
-具体的には、次の通り `LlmAgent` オブジェクト作成時に [`Gemini`](https://google.github.io/adk-docs/api-reference/python/google-adk.html#google.adk.models.Gemini) を直接指定することで設定が可能となります。
+具体的には、次の通り `LlmAgent` オブジェクト作成時に [`Gemini`](https://google.github.io/adk-docs/api-reference/python/google-adk.html#google.adk.models.Gemini) クラス内で指定することが可能です。
 
 ```python
 from google.adk.agents import LlmAgent
@@ -144,11 +144,11 @@ root_agent = LlmAgent(
 
 ### ADK (LiteLLM) のリトライ
 
-ADK では、モデルとして LiteLLM という様々な LLM API をラップした OSS のライブラリを指定することができ、こちらを活用すると、Gemini / Vetex AI 以外の LLM API を利用することも可能となります。
+ADK では、LiteLLM という様々な LLM API をラップしたライブラリをモデルとして指定することもでき、こちらを活用すると Gemini / Vetex AI 以外の LLM API を利用することが可能となります。
 
-具体的には、[こちらのドキュメント](https://google.github.io/adk-docs/agents/models/#using-cloud-proprietary-models-via-litellm)に記載の通り `LlmAgent` のモデルとして `LiteLlm` を指定します。
+具体的には、[こちらのドキュメント](https://google.github.io/adk-docs/agents/models/#using-cloud-proprietary-models-via-litellm)に記載の通り `LlmAgent` のモデルに `LiteLlm` クラスを指定します。
 
-LiteLLM では、様々な LLM API を統一されたインターフェース経由で利用することが可能なことに加えて、ビルトインのリトライやフォールバックの機能も提供しており、具体的には、[`Router`](https://docs.litellm.ai/docs/routing) (`litellm.router`) の機能を利用して、次のようにリトライを設定することができます。
+LiteLLM では、複数の LLM API を統一されたインターフェース経由で利用できることに加えて、組み込みのリトライやフォールバックの機能も提供しており、具体的には、[`Router`](https://docs.litellm.ai/docs/routing) (`litellm.router`) という機能を利用して、次のようにリトライを設定することができます。
 
 ```python
 import os
@@ -176,7 +176,7 @@ root_agent = LlmAgent(
 ```
 
 :::message
-今回モデルには Vertex AI の Claude Sonnet 4.5 API を指定しているため、事前に[こちらの手順](https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/claude/use-claude#before_you_begin)に沿って API の有効化が必要になります。
+今回モデルには Vertex AI 上の Claude Sonnet 4.5 を指定しているため、事前に[こちらの手順](https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/claude/use-claude#before_you_begin)に沿って API の有効化が必要になります。
 :::
 
 上記のコード例では明示的に `retry_strategy` に `exponential_backoff_retry` を指定することにより指数バックオフによるリトライを実現していますが、こちらを指定しない場合、デフォルトでは `constant_retry` が指定されるため注意が必要です。
@@ -201,7 +201,7 @@ PT は必要なスループットを事前に予約できるため、高い信�
 
 一方でサービスの立ち上げフェーズなど、PT の購入量をできるだけ抑えつつ、コストと安定性のバランスを取りたいという場面も多いかと思います。
 
-そのようなニーズに対して考え得るアプローチとして、通常時は従量課金制でリクエストを行いつつ、万が一 429 エラーが返ってきた場合にのみ、PT のリクエストとしてフォールバックするという戦略が考えられます。
+そのようなニーズに対して有効なアプローチの一つとして、通常時は従量課金制でリクエストを行いつつ、万が一 429 エラーが返ってきた場合にのみ、PT のリクエストとしてフォールバックするという戦略が考えられます。
 
 ![](https://storage.googleapis.com/zenn-user-upload/9733b90ca371-20251014.png)
 
@@ -292,7 +292,7 @@ root_agent = LlmAgent(
 )
 ```
 
-尚、汎用的なエラーに対するフォールバック先を意味する `fallbacks` の代わりに上記コード内でコメントアウトしている `context_window_fallback_dict` オプションを利用することで、入力トークンを超過した場合にのみ、よりコンテキストウィンドウの大きい Gemini 2.5 Pro にフォールバックするような処理を実装することも可能です。こちらのアプローチは現実のユースケースにおいても使い所が多そうです。
+なお、汎用的なエラーに対するフォールバック先を意味する `fallbacks` の代わりに上記コード内でコメントアウトしている `context_window_fallback_dict` オプションを利用することで、入力トークンを超過した場合にのみ、よりコンテキストウィンドウの大きい Gemini 2.5 Pro にフォールバックするような処理を実装することも可能です。こちらのアプローチは現実のユースケースにおいても使い所が多そうです。
 
 ## 実際に 429 エラーを発生させてみよう
 
@@ -398,7 +398,7 @@ I am a large language model, trained by Google. My purpose is to assist users wi
 
 続いて、ADK + LiteLLM を利用したリトライおよびフォールバックの挙動を確認していきます。
 
-今回はテスト用に 2 つのエージェントを作成し、`adk run` コマンドを利用して非対話モードで実行していくため、次のプロジェクト (ディレクトリ) 構成としています。
+今回はテスト用に 2 つのエージェントを作成し、`adk run` コマンドを非対話モードで実行しますので、プロジェクト (ディレクトリ) 構成を次のようにしています。
 
 ```
 project_folder
@@ -412,7 +412,7 @@ project_folder
     ├── agent.py
 ```
 
-各 `agent.py` 内でエージェントの定義をしており、今回は非対話モードで実行しますので `replay.json` というファイル内に次の通りクエリを記述しています。
+各 `agent.py` 内でエージェントを定義し、非対話モードでの実行用クエリを `replay.json` に次の通り記述しています。
 
 ```json:replay.json
 {"state": {}, "queries": ["Tell me your role briefly."]}
