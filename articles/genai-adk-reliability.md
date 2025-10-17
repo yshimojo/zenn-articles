@@ -170,7 +170,7 @@ root_agent = LlmAgent(
         retry_policy=retry_policy,
         retry_strategy='exponential_backoff_retry',
     ),
-    name="litellm_caude_agent",
+    name="litellm_claude_agent",
     instruction="You are an assistant powered by Claude Sonnet 4.5.",
 )
 ```
@@ -191,7 +191,7 @@ LiteLLM には、より高度なルーティング処理を実装可能な LiteL
 
 ## フォールバック戦略と実装方法
 
-フォールバック戦略を考える前に、Provisioned Throughput (PT) の[デフォルト](https://cloud.google.com/vertex-ai/generative-ai/docs/provisioned-throughput/use-provisioned-throughput#default)の動作について解説します。
+フォールバック戦略を考える前に、Provisioned Throughput (PT) の[デフォルトの動作](https://cloud.google.com/vertex-ai/generative-ai/docs/provisioned-throughput/use-provisioned-throughput#default)について解説します。
 - デフォルトでは、購入したスループット量を超えると、超過分は自動的に従量課金制 (オンデマンド) のリクエストとして処理されます。(= **spillover**)
 - 明示的に PT のみを使用する場合は、リクエスト送信時に `X-Vertex-AI-LLM-Request-Type` HTTP ヘッダーを `dedicated` に、従量課金制のみを使用する場合は、同 HTTP ヘッダーを `shared` に設定します。
 
