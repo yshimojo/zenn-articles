@@ -286,7 +286,7 @@ results = data_object_search_service_client.search_data_objects(text_search_requ
 
 デフォルトの挙動では、検索クエリに複数の単語を入力した場合 (例: "Blue Jeans")、それらすべてを含むドキュメントを探す**暗黙的な AND 検索**が行われます。
 
-なお、[公式ドキュメント](https://docs.cloud.google.com/vertex-ai/docs/vector-search-2/query-search/search#text_search)によると、より高度な検索を行いたい場合は `enhanced_query` オプションを `true` に設定します。これにより、ステミング (語形変化の統一) やストップワードの削除、および以下の検索演算子が利用できるようになります。
+なお、[公式ドキュメント](https://docs.cloud.google.com/vertex-ai/docs/vector-search-2/query-search/search#text_search)によると、より高度な検索を行いたい場合は `enhanced_query` オプションを `true` に設定します。これにより、ステミング (語形変化の統一) やストップワードの削除、および `OR` `"` `-` といった追加の検索演算子が利用できるようになります。
 
 :::message
 記事執筆時点では `enhanced_query` オプションはまだ有効化できないようでした。今後のアップデートに期待しましょう。
@@ -333,7 +333,7 @@ batch_results = data_object_search_service_client.batch_search_data_objects(batc
 
 [`BatchSearchDataObjectsRequest`](https://docs.cloud.google.com/python/docs/reference/google-cloud-vectorsearch/latest/google.cloud.vectorsearch_v1beta.types.BatchSearchDataObjectsRequest) 内で複数の検索定義 (`searches`) を渡し、[`CombineResultsOptions`](https://docs.cloud.google.com/python/docs/reference/google-cloud-vectorsearch/latest/google.cloud.vectorsearch_v1beta.types.BatchSearchDataObjectsRequest.CombineResultsOptions) でそれらを統合しています。
 
-また、RRF によるリランキングでは、セマンティック検索とテキスト検索の結果を `1:1` の重み付けでマージしています。
+RRF によるリランキングでは、セマンティック検索とテキスト検索の結果を `1:1` の重み付けでマージしています。
 
 :::details (参考) Vector Search 1.0 のハイブリッド検索
 現行の 1.0 で密ベクトル (Dense Vector) と疎ベクトル (Sparse Vector) を利用したハイブリッド検索を実現する方法については、以前の記事「[Vertex AI Vector Search のハイブリッド検索を日本語で試してみた](https://zenn.dev/google_cloud_jp/articles/vs-hybridsearch-japanese)」もあわせてご参考ください。
