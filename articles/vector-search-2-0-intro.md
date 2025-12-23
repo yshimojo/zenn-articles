@@ -3,7 +3,7 @@ title: "Vertex AI Vector Search 2.0 登場 ―― ANN 特化から「データ�
 emoji: "📁"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["googlecloud", "vertexai", "vectorsearch", "情報検索", "RAG"]
-published: false
+published: true
 ---
 
 [Google Cloud Japan Advent Calendar 2025](https://zenn.dev/google_cloud_jp/articles/ba1f810503bfd2) AI/ML 特集版 23 日目の記事です。
