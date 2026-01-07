@@ -105,6 +105,13 @@ Google Drive のファイルフォーマットに加えて、DOCX や PPTX な�
 
 余談ですが、[Feature Store](https://cloud.google.com/vertex-ai/generative-ai/docs/use-feature-store-with-rag) および [Vector Search](https://cloud.google.com/vertex-ai/generative-ai/docs/use-vertexai-vector-search) のドキュメントに  `RAG Engine uses a built-in vector database powered by Spanner to store and manage vector representations of text documents.` と説明があることから、組み込みの RAG マネージド DB は Spanner がバックエンドになっていることが分かります。(もちろんユーザーは Spanner のレイヤを意識する必要はありません)
 
+:::message
+**2026/01/07 追記**
+2025 年 9 月に `RagManagedDb` が一般提供 (GA) となりました。([リリースノート](https://docs.cloud.google.com/vertex-ai/docs/release-notes#September_03_2025))
+GA 以前は無料で利用できていましたが、GA に伴い Google テナントプロジェクト側に作成される Spanner インスタンスに対して課金が発生するようになりましたのでご注意ください。
+料金の詳細は[公式ドキュメント](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/rag-engine/rag-engine-billing)もあわせてご参考ください。
+:::
+
 ### 回答生成モデル (LLM) の選択
 
 これまで Gemini 前提で説明してきましたが、[Gemini モデル](https://cloud.google.com/vertex-ai/generative-ai/docs/supported-rag-models#supported-gemini-models)に加えて、RAG Engine では Model Garden 上の全てのモデルをサポートしています。
